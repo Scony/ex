@@ -87,6 +87,11 @@ class ExamplesHandler(tornado.web.RequestHandler):
 		_id = db['examples'].insert({})
 		self.set_header("Location", "/examples/"+str(_id))
 
+class TestHandler(tornado.web.RequestHandler):
+	def get(self):
+		self.set_status(303)
+		self.set_header("Location", "/commands")
+
 if __name__ == "__main__":
 	tornado.options.parse_command_line()
 	application = tornado.web.Application([
@@ -94,6 +99,7 @@ if __name__ == "__main__":
 		("/commands", CommandsHandler),
 		("/commands/([a-z0-9]+)", CommandHandler),
 		("/examples", ExamplesHandler),
+		("/test", TestHandler),
 	])
 	application.listen(options.port)
 	tornado.ioloop.IOLoop.instance().start()
