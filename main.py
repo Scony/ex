@@ -201,9 +201,67 @@ class ExampleUpvotesHandler(tornado.web.RequestHandler):
 	def get(self, _id):
 		row = db['examples'].find_one({'_id': ObjectId(_id)})
 		if row:
-			for vote in db['votes'].find({'example': row['_id']}):
+			for vote in db['votes'].find({'example': row['_id'], 'value': 1}):
 				vote['_id'] = str(vote['_id'])
+				vote['example'] = str(vote['example'])
 				self.write(json.dumps(vote)+'\n')
+		else:
+			self.set_status(404)
+
+	def post(self, _id):
+		row = db['examples'].find_one({'_id': ObjectId(_id)})
+		if row:
+			keys = {'example': row['_id'], 'ip': self.request.remote_ip}
+			data = {'example': row['_id'], 'ip': self.request.remote_ip, 'value': 1}
+			db['votes'].update(keys, data, True)
+		else:
+			self.set_status(404)
+
+class ExampleDownvotesHandler(tornado.web.RequestHandler):
+	def get(self, _id):
+		row = db['examples'].find_one({'_id': ObjectId(_id)})
+		if row:
+			for vote in db['votes'].find({'example': row['_id'], 'value': -1}):
+				vote['_id'] = str(vote['_id'])
+				vote['example'] = str(vote['example'])
+				self.write(json.dumps(vote)+'\n')
+		else:
+			self.set_status(404)
+
+	def post(self, _id):
+		row = db['examples'].find_one({'_id': ObjectId(_id)})
+		if row:
+			keys = {'example': row['_id'], 'ip': self.request.remote_ip}
+			data = {'example': row['_id'], 'ip': self.request.remote_ip, 'value': -1}
+			db['votes'].update(keys, data, True)
+		else:
+			self.set_status(404)
+
+class ExampleVoteHandler(tornado.web.RequestHandler):
+	def get(self, _id, _id2):
+		row = db['examples'].find_one({'_id': ObjectId(_id)})
+		if row:
+			row2 = db['votes'].find_one({'example': row['_id'], '_id': ObjectId(_id2)})
+			if row2:
+				row2['_id'] = str(row2['_id'])
+				row2['example'] = str(row2['example'])
+				self.write(json.dumps(row2)+'\n')
+			else:
+				self.set_status(404)
+		else:
+			self.set_status(404)
+
+	def delete(self, _id, _id2):
+		row = db['examples'].find_one({'_id': ObjectId(_id)})
+		if row:
+			row2 = db['votes'].find_one({'example': row['_id'], '_id': ObjectId(_id2)})
+			if row2:
+				if row2['ip'] == self.request.remote_ip:
+					db['votes'].remove({'example': row['_id'], '_id': ObjectId(_id2), 'ip': self.request.remote_ip})
+				else:
+					self.set_status(403)
+			else:
+				self.set_status(404)
 		else:
 			self.set_status(404)
 
@@ -288,6 +346,7 @@ class VotesHandler(tornado.web.RequestHandler):
 	def get(self):
 		for vote in db['votes'].find({}):
 			vote['_id'] = str(vote['_id'])
+			vote['example'] = str(vote['example'])
 			self.write(json.dumps(vote)+'\n')
 
 class TestHandler(tornado.web.RequestHandler):
@@ -306,9 +365,9 @@ if __name__ == "__main__":
 		("/examples", ExamplesHandler),
 		("/examples/([a-f0-9]{24})", ExampleHandler),
 		("/examples/([a-f0-9]{24})/upvotes", ExampleUpvotesHandler),
-		# ("/examples/([a-f0-9]{24})/upvotes/([a-f0-9]{24})", ExampleUpvoteHandler),
-		# ("/examples/([a-f0-9]{24})/downvotes", ExampleDownvotesHandler),
-		# ("/examples/([a-f0-9]{24})/downvotes/([a-f0-9]{24})", ExampleDownvoteHandler),
+		("/examples/([a-f0-9]{24})/upvotes/([a-f0-9]{24})", ExampleVoteHandler),
+		("/examples/([a-f0-9]{24})/downvotes", ExampleDownvotesHandler),
+		("/examples/([a-f0-9]{24})/downvotes/([a-f0-9]{24})", ExampleVoteHandler),
 		("/examples/([a-f0-9]{24})/commands", ExampleCommandsHandler),
 		("/examples/([a-f0-9]{24})/commands/([a-z0-9]+)", ExampleCommandHandler),
 		("/votes", VotesHandler),
