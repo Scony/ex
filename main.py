@@ -9,26 +9,38 @@ import json
 # objectid
 from bson.errors import InvalidId
 from bson.objectid import ObjectId
+# os
+import os
 
 connection = pymongo.Connection('localhost')
 db = connection['ex']
 
 define("port", default=8888, help="run on the given port", type=int)
 
-class RootHandler(tornado.web.RequestHandler):
+class RootHandler(tornado.web.RequestHandler): # todo: change
 	def get(self):
 		self.write(str(db['commands'].find_one({})['_id']))
 
 class CommandsHandler(tornado.web.RequestHandler):
-	def get(self):		# todo: fix
+	def get(self):
+		jcommands = []
 		for command in db['commands'].find({}):
 			command['_id'] = str(command['_id'])
-			self.write(json.dumps(command)+'\n')
+			jcommands.append(command)
+		self.write(json.dumps(jcommands)+'\n')
 
 	def post(self):
-		self.set_status(303)
-		_id = db['commands'].insert({})
+		self.set_status(201)
+		_id = db['commands'].insert({'name': '', 'description': ''})
 		self.set_header("Location", "/commands/"+str(_id))
+
+class PopularCommandsHandler(tornado.web.RequestHandler):
+	def get(self):
+		jcommands = []
+		for command in db['commands'].find({}):
+			command['_id'] = str(command['_id'])
+			jcommands.append(command)
+		self.write(json.dumps(jcommands[:2])+'\n')
 
 class CommandHandler(tornado.web.RequestHandler):
 	def get(self, _id):
@@ -60,8 +72,6 @@ class CommandHandler(tornado.web.RequestHandler):
 					if type(v) is str:
 						updates[k] = v
 				db['commands'].update({'_id': row['_id']},{'$set':updates})
-				# self.write(self.request.body.decode('utf-8')+"\n")
-				# self.write(json.dumps(updates)+'\n')
 		else:
 			self.set_status(404)
 
@@ -88,9 +98,23 @@ class CommandExamplesHandler(tornado.web.RequestHandler):
 			for b in binds:
 				ids.append(b['example'])
 			examples = db['examples'].find({'_id': {'$in': ids}})
+			jexamples = []
 			for example in examples:
+				votes = db['votes'].find({'example': example['_id']})
+				score = 0;
+				for vote in votes:
+					score += vote['value']
 				example['_id'] = str(example['_id'])
-				self.write(json.dumps(example)+'\n')
+				example['score'] = score
+				jexamples.append(example)
+			decorated = [(dict_['score'], dict_) for dict_ in jexamples]
+			try:
+				decorated.sort()
+			except:
+				pass
+			decorated.reverse()
+			jexamples = [dict_ for (key, dict_) in decorated]
+			self.write(json.dumps(jexamples)+'\n')
 		else:
 			self.set_status(404)
 
@@ -150,15 +174,25 @@ class CommandExampleHandler(tornado.web.RequestHandler):
 			self.set_status(404)
 
 class ExamplesHandler(tornado.web.RequestHandler):
-	def get(self):		# todo: fix
+	def get(self):
+		jexamples = []
 		for example in db['examples'].find({}):
 			example['_id'] = str(example['_id'])
-			self.write(json.dumps(example)+'\n')
+			jexamples.append(example)
+		self.write(json.dumps(jexamples)+'\n')
 
 	def post(self):
-		self.set_status(303)
-		_id = db['examples'].insert({})
+		self.set_status(201)
+		_id = db['examples'].insert({'example': '', 'description': ''})
 		self.set_header("Location", "/examples/"+str(_id))
+
+class PopularExamplesHandler(tornado.web.RequestHandler):
+	def get(self):
+		jexamples = []
+		for example in db['examples'].find({}):
+			example['_id'] = str(example['_id'])
+			jexamples.append(example)
+		self.write(json.dumps(jexamples[:2])+'\n')
 
 class ExampleHandler(tornado.web.RequestHandler):
 	def get(self, _id):
@@ -201,10 +235,12 @@ class ExampleUpvotesHandler(tornado.web.RequestHandler):
 	def get(self, _id):
 		row = db['examples'].find_one({'_id': ObjectId(_id)})
 		if row:
+			jvotes = []
 			for vote in db['votes'].find({'example': row['_id'], 'value': 1}):
 				vote['_id'] = str(vote['_id'])
 				vote['example'] = str(vote['example'])
-				self.write(json.dumps(vote)+'\n')
+				jvotes.append(vote)
+			self.write(json.dumps(jvotes)+'\n')
 		else:
 			self.set_status(404)
 
@@ -221,10 +257,12 @@ class ExampleDownvotesHandler(tornado.web.RequestHandler):
 	def get(self, _id):
 		row = db['examples'].find_one({'_id': ObjectId(_id)})
 		if row:
+			jvotes = []
 			for vote in db['votes'].find({'example': row['_id'], 'value': -1}):
 				vote['_id'] = str(vote['_id'])
 				vote['example'] = str(vote['example'])
-				self.write(json.dumps(vote)+'\n')
+				jvotes.append(vote)
+			self.write(json.dumps(jvotes)+'\n')
 		else:
 			self.set_status(404)
 
@@ -274,9 +312,11 @@ class ExampleCommandsHandler(tornado.web.RequestHandler):
 			for b in binds:
 				ids.append(b['command'])
 			commands = db['commands'].find({'_id': {'$in': ids}})
+			jcommands = []
 			for command in commands:
 				command['_id'] = str(command['_id'])
-				self.write(json.dumps(command)+'\n')
+				jcommands.append(command)
+			self.write(json.dumps(jcommands)+'\n')
 		else:
 			self.set_status(404)
 
@@ -311,15 +351,15 @@ class ExampleCommandHandler(tornado.web.RequestHandler):
 				row2 = db['commands'].find_one({'$or': [{'_id': ObjectId(_id2)}, {'name': _id2}]})
 			except:
 				row2 = db['commands'].find_one({'name': _id2})
-				if row2:
-					bind = db['binds'].find_one({'example': ObjectId(_id), 'command': row2['_id']})
-					if bind:
-						self.set_status(303)
-						self.set_header("Location", "/commands/"+_id2)
-					else:
-						self.set_status(404)
+			if row2:
+				bind = db['binds'].find_one({'example': ObjectId(_id), 'command': row2['_id']})
+				if bind:
+					self.set_status(303)
+					self.set_header("Location", "/commands/"+_id2)
 				else:
 					self.set_status(404)
+			else:
+				self.set_status(404)
 		else:
 			self.set_status(404)
 
@@ -330,24 +370,26 @@ class ExampleCommandHandler(tornado.web.RequestHandler):
 				row2 = db['commands'].find_one({'$or': [{'_id': ObjectId(_id2)}, {'name': _id2}]})
 			except:
 				row2 = db['commands'].find_one({'name': _id2})
-				if row2:
-					bind = db['binds'].find_one({'example': ObjectId(_id), 'command': row2['_id']})
-					if bind:
-						db['binds'].remove({'example': ObjectId(_id), 'command': row2['_id']})
-						self.set_status(410)
-					else:
-						self.set_status(404)
+			if row2:
+				bind = db['binds'].find_one({'example': ObjectId(_id), 'command': row2['_id']})
+				if bind:
+					db['binds'].remove({'example': ObjectId(_id), 'command': row2['_id']})
+					self.set_status(410)
 				else:
 					self.set_status(404)
+			else:
+				self.set_status(404)
 		else:
 			self.set_status(404)
 
 class VotesHandler(tornado.web.RequestHandler):
 	def get(self):
+		jvotes = []
 		for vote in db['votes'].find({}):
 			vote['_id'] = str(vote['_id'])
 			vote['example'] = str(vote['example'])
-			self.write(json.dumps(vote)+'\n')
+			jvotes.append(vote)
+		self.write(json.dumps(jvotes)+'\n')
 
 class TestHandler(tornado.web.RequestHandler):
 	def get(self):
@@ -359,10 +401,12 @@ if __name__ == "__main__":
 	application = tornado.web.Application([
 		("/", RootHandler),
 		("/commands", CommandsHandler),
+		("/commands/popular", PopularCommandsHandler),
 		("/commands/([a-z0-9]+)", CommandHandler),
 		("/commands/([a-z0-9]+)/examples", CommandExamplesHandler),
 		("/commands/([a-z0-9]+)/examples/([a-f0-9]{24})", CommandExampleHandler),
 		("/examples", ExamplesHandler),
+		("/examples/popular", PopularExamplesHandler),
 		("/examples/([a-f0-9]{24})", ExampleHandler),
 		("/examples/([a-f0-9]{24})/upvotes", ExampleUpvotesHandler),
 		("/examples/([a-f0-9]{24})/upvotes/([a-f0-9]{24})", ExampleVoteHandler),
@@ -372,6 +416,8 @@ if __name__ == "__main__":
 		("/examples/([a-f0-9]{24})/commands/([a-z0-9]+)", ExampleCommandHandler),
 		("/votes", VotesHandler),
 		("/test", TestHandler),
+		("/webapp/()$", tornado.web.StaticFileHandler, {'path':'./index.html'}),
+		("/webapp/(.*)", tornado.web.StaticFileHandler, {'path':'./'}),
 	])
 	application.listen(options.port)
 	tornado.ioloop.IOLoop.instance().start()
