@@ -2,6 +2,7 @@
 import sys
 import urllib.request
 import json
+from colorama import Fore, Style
 
 root = 'http://127.0.0.1:8888'
 
@@ -11,8 +12,8 @@ if len(sys.argv) > 1:
         data = json.loads(data)
         for d in data:
             if 'example' in d and 'description' in d and 'score' in d:
-                print(d['example']+' \t# '+d['description']+' ('+str(d['score'])+')')
+                print(Fore.GREEN+Style.BRIGHT+d['example']+Fore.RED+Style.NORMAL+' \t# '+d['description']+' ('+str(d['score'])+')'+Style.RESET_ALL)
     except:
-        print('No examples found')
+        print(Fore.RED+'No examples found'+Style.RESET_ALL)
 else:
     print('Usage: ex command')
