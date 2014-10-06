@@ -7,7 +7,6 @@ import pymongo
 # json
 import json
 # objectid
-from bson.errors import InvalidId
 from bson.objectid import ObjectId
 # os
 import os
@@ -71,7 +70,10 @@ class CommandHandler(tornado.web.RequestHandler):
 				for k,v in _updates.items():
 					if type(v) is str:
 						updates[k] = v
-				db['commands'].update({'_id': row['_id']},{'$set':updates})
+				if 'name' in updates and len(updates['name']) and db['commands'].find_one({'name': updates['name']}):
+					self.set_status(409)
+				else:
+					db['commands'].update({'_id': row['_id']},{'$set':updates})
 		else:
 			self.set_status(404)
 
@@ -218,8 +220,6 @@ class ExampleHandler(tornado.web.RequestHandler):
 					if type(v) is str:
 						updates[k] = v
 				db['examples'].update({'_id': row['_id']},{'$set':updates})
-				# self.write(self.request.body.decode('utf-8')+"\n")
-				# self.write(json.dumps(updates)+'\n')
 		else:
 			self.set_status(404)
 

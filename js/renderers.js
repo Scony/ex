@@ -97,17 +97,20 @@ function renderCommands () {
 		        description : cdesci
 		    })
 		}).done(function () {
-		    // renderDialog('Success','Command ' + cnamei + ' has been added');
 		    renderCommands();
-    		}).fail(function (jqXHR, textStatus,errorThrown) {
-		    $('#content').text('fail: '+textStatus+', '+errorThrown);
+    		}).fail(function () {
+    		    $.ajax({
+			type: 'DELETE',
+			url : server + request.getResponseHeader('Location')
+		    });
+		    renderError('Can not add given command');
 		});
     	    }).fail(function (jqXHR, textStatus,errorThrown) {
-		$('#content').text('fail: '+textStatus+', '+errorThrown);
+		renderError('fail: '+textStatus+', '+errorThrown);
 	    });
 	});
     }).fail(function (jqXHR, textStatus,errorThrown) {
-	$('#content').text('fail: '+textStatus+', '+errorThrown);
+	renderError('fail: '+textStatus+', '+errorThrown);
     });
 }
 
@@ -178,14 +181,14 @@ function renderExamples () {
 		    // renderDialog('Success','Example has been added');
 		    renderExamples();
     		}).fail(function (jqXHR, textStatus,errorThrown) {
-		    $('#content').text('fail: '+textStatus+', '+errorThrown);
+		    renderError('fail: '+textStatus+', '+errorThrown);
 		});
     	    }).fail(function (jqXHR, textStatus,errorThrown) {
-		$('#content').text('fail: '+textStatus+', '+errorThrown);
+		renderError('fail: '+textStatus+', '+errorThrown);
 	    });
 	});
     }).fail(function (jqXHR, textStatus,errorThrown) {
-	$('#content').text('fail: '+textStatus+', '+errorThrown);
+	renderError('fail: '+textStatus+', '+errorThrown);
     });
 }
 
