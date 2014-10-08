@@ -18,7 +18,22 @@ define("port", default=8888, help="run on the given port", type=int)
 
 class RootHandler(tornado.web.RequestHandler): # todo: change
 	def get(self):
-		self.write(str(db['commands'].find_one({})['_id']))
+		self.write('/\n' +
+			   '/commands\n' +
+			   '/commands/popular\n' +
+			   '/commands/([a-z0-9]+)\n' +
+			   '/commands/([a-z0-9]+)/examples\n' +
+			   '/commands/([a-z0-9]+)/examples/([a-f0-9]{24})\n' +
+			   '/examples\n' +
+			   '/examples/popular\n' +
+			   '/examples/([a-f0-9]{24})\n' +
+			   '/examples/([a-f0-9]{24})/upvotes\n' +
+			   '/examples/([a-f0-9]{24})/upvotes/([a-f0-9]{24})\n' +
+			   '/examples/([a-f0-9]{24})/downvotes\n' +
+			   '/examples/([a-f0-9]{24})/downvotes/([a-f0-9]{24})\n' +
+			   '/examples/([a-f0-9]{24})/commands\n' +
+			   '/examples/([a-f0-9]{24})/commands/([a-z0-9]+)\n' +
+			   '/votes\n')
 
 class CommandsHandler(tornado.web.RequestHandler):
 	def get(self):
@@ -391,11 +406,6 @@ class VotesHandler(tornado.web.RequestHandler):
 			jvotes.append(vote)
 		self.write(json.dumps(jvotes)+'\n')
 
-class TestHandler(tornado.web.RequestHandler):
-	def get(self):
-		self.set_status(303)
-		self.set_header("Location", "/commands")
-
 if __name__ == "__main__":
 	tornado.options.parse_command_line()
 	application = tornado.web.Application([
@@ -415,7 +425,6 @@ if __name__ == "__main__":
 		("/examples/([a-f0-9]{24})/commands", ExampleCommandsHandler),
 		("/examples/([a-f0-9]{24})/commands/([a-z0-9]+)", ExampleCommandHandler),
 		("/votes", VotesHandler),
-		("/test", TestHandler),
 		("/webapp/()$", tornado.web.StaticFileHandler, {'path':'./index.html'}),
 		("/webapp/(.*)", tornado.web.StaticFileHandler, {'path':'./'}),
 	])
