@@ -13,7 +13,6 @@ import os
 import sys
 
 #handlers
-from rest.test import *
 from rest.commands import *
 from rest.examples import *
 from rest.votes import *
