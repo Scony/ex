@@ -14,26 +14,12 @@ import os
 connection = pymongo.Connection('localhost')
 db = connection['ex']
 
-define("port", default=8888, help="run on the given port", type=int)
+define("port", default=80, help="run on the given port", type=int)
 
 class RootHandler(tornado.web.RequestHandler): # todo: change
 	def get(self):
-		self.write('/\n' +
-			   '/commands\n' +
-			   '/commands/popular\n' +
-			   '/commands/([a-z0-9]+)\n' +
-			   '/commands/([a-z0-9]+)/examples\n' +
-			   '/commands/([a-z0-9]+)/examples/([a-f0-9]{24})\n' +
-			   '/examples\n' +
-			   '/examples/popular\n' +
-			   '/examples/([a-f0-9]{24})\n' +
-			   '/examples/([a-f0-9]{24})/upvotes\n' +
-			   '/examples/([a-f0-9]{24})/upvotes/([a-f0-9]{24})\n' +
-			   '/examples/([a-f0-9]{24})/downvotes\n' +
-			   '/examples/([a-f0-9]{24})/downvotes/([a-f0-9]{24})\n' +
-			   '/examples/([a-f0-9]{24})/commands\n' +
-			   '/examples/([a-f0-9]{24})/commands/([a-z0-9]+)\n' +
-			   '/votes\n')
+		self.set_status(303)
+		self.set_header("Location", "/webapp/")
 
 class CommandsHandler(tornado.web.RequestHandler):
 	def get(self):
@@ -169,7 +155,7 @@ class CommandExampleHandler(tornado.web.RequestHandler):
 			row2 = db['binds'].find_one({'command': row['_id'], 'example': ObjectId(_id2)})
 			if row2:
 				self.set_status(303)
-				self.set_header("Location", "/examples/"+_id2)				
+				self.set_header("Location", "/examples/"+_id2)
 			else:
 				self.set_status(404)
 		else:
@@ -425,8 +411,8 @@ if __name__ == "__main__":
 		("/examples/([a-f0-9]{24})/commands", ExampleCommandsHandler),
 		("/examples/([a-f0-9]{24})/commands/([a-z0-9]+)", ExampleCommandHandler),
 		("/votes", VotesHandler),
-		("/webapp/()$", tornado.web.StaticFileHandler, {'path':'./index.html'}),
-		("/webapp/(.*)", tornado.web.StaticFileHandler, {'path':'./'}),
+		("/webapp/()$", tornado.web.StaticFileHandler, {'path':os.path.dirname(os.path.abspath(__file__))+'/webapp/index.html'}),
+		("/webapp/(.*)", tornado.web.StaticFileHandler, {'path':os.path.dirname(os.path.abspath(__file__))+'/webapp/'}),
 	])
 	application.listen(options.port)
 	tornado.ioloop.IOLoop.instance().start()
