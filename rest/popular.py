@@ -1,10 +1,7 @@
 import tornado.web
-import pymongo
 import json
+from rest.connection import *
 from bson.objectid import ObjectId
-
-connection = pymongo.Connection('localhost')
-db = connection['ex']
 
 class PopularCommandsHandler(tornado.web.RequestHandler):
 	def get(self):

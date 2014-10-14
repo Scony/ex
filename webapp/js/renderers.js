@@ -5,7 +5,7 @@ function renderLoadingGif () {
 function renderPopular () {
     $.ajax({
 	type: 'GET',
-	url : server + '/commands/popular'
+	url : server + '/popular/commands'
     }).done(function (data) {
 	var list = ''
 	var arr = JSON.parse(data)
@@ -19,7 +19,7 @@ function renderPopular () {
     });
     $.ajax({
 	type: 'GET',
-	url : server + '/examples/popular'
+	url : server + '/popular/examples'
     }).done(function (data) {
 	var list = ''
 	var arr = JSON.parse(data)
@@ -45,14 +45,14 @@ function renderCommands () {
 	    '<thead>' +
 	    '<tr>' +
 	    '<th>Command</th>' +
-	    '<th class="text-center">Actions</th>' +
+	    '<th class="text-center">Examples</th>' +
 	    '</tr>' +
 	    '</thead>' +
 	    '<tbody>';
 	for(i in arr) {
 	    table += '<tr>';
 	    table += '<td><a href="#" class="renderCommand" x-id="' + arr[i]['_id'] + '">'+ arr[i]['name'] + '</a></td>';
-	    table += '<td class="text-center"><button class="btn btn-danger btn-xs removeCommand" x-id="' + arr[i]['_id'] + '">X</button></td>';
+	    table += '<td class="text-center">' + arr[i]['examples'] + '</td>';
 	    table += '</tr>';
 	}
 	table += '</tbody>' +
@@ -60,14 +60,6 @@ function renderCommands () {
 	$('#content').html(table);
 	$('.renderCommand').click(function () {
 	    renderCommand($(this).attr('x-id'));
-	});
-	$('.removeCommand').click(function () {
-	    $.ajax({
-		type: 'DELETE',
-		url : server + '/commands/' + $(this).attr('x-id')
-	    }).fail(function (a,b,c) {
-		renderCommands();
-	    });
 	});
 	var well = '<hr>' +
 	    '<div class="well">' + 
@@ -126,14 +118,14 @@ function renderExamples () {
 	    '<thead>' +
 	    '<tr>' +
 	    '<th>Example</th>' +
-	    '<th class="text-center">Actions</th>' +
+	    '<th class="text-center">Score</th>' +
 	    '</tr>' +
 	    '</thead>' +
 	    '<tbody>';
 	for(i in arr) {
 	    table += '<tr>';
 	    table += '<td><a href="#" class="renderExample" x-id="' + arr[i]['_id'] + '">'+ arr[i]['example'] + '</a></td>';
-	    table += '<td class="text-center"><button class="btn btn-danger btn-xs removeExample" x-id="' + arr[i]['_id'] + '">X</button></td>';
+	    table += '<td class="text-center">' + arr[i]['score'] + '</td>';
 	    table += '</tr>';
 	}
 	table += '</tbody>' +
@@ -141,14 +133,6 @@ function renderExamples () {
 	$('#content').html(table);
 	$('.renderExample').click(function () {
 	    renderExample($(this).attr('x-id'));
-	});
-	$('.removeExample').click(function () {
-	    $.ajax({
-		type: 'DELETE',
-		url : server + '/examples/' + $(this).attr('x-id')
-	    }).fail(function (a,b,c) {
-		renderExamples();
-	    });
 	});
 	var well = '<hr>' +
 	    '<div class="well">' + 
@@ -213,7 +197,7 @@ function renderCommand (id) {
 		'<tr>' +
 		'<th>Example</th>' +
 		'<th class="text-center">Score</th>' +
-		'<th class="text-center">Actions</th>' +
+		'<th class="text-center">Vote</th>' +
 		'</tr>' +
 		'</thead>' +
 		'<tbody>';
@@ -224,7 +208,6 @@ function renderCommand (id) {
 		table += '<td class="text-center">';
 		table += '<button class="btn btn-primary btn-xs upVote" x-id="' + examples[i]['_id'] + '">+</button> ';
 		table += '<button class="btn btn-primary btn-xs downVote" x-id="' + examples[i]['_id'] + '">-</button> ';
-		table += '<button class="btn btn-danger btn-xs removeExample" x-id="' + examples[i]['_id'] + '">X</button>';
 		table += '</td>';
 		table += '</tr>';
 	    }
@@ -247,14 +230,6 @@ function renderCommand (id) {
 		    type: 'POST',
 		    url : server + '/examples/' + $(this).attr('x-id') + '/downvotes'
 		}).done(function () {
-		    renderCommand(id);
-		});
-	    });
-	    $('.removeExample').click(function () {
-		$.ajax({
-		    type: 'DELETE',
-		    url : server + '/commands/' + id + '/examples/' + $(this).attr('x-id')
-		}).fail(function () {
 		    renderCommand(id);
 		});
 	    });
@@ -284,14 +259,12 @@ function renderExample (id) {
 		'<thead>' +
 		'<tr>' +
 		'<th>Related command</th>' +
-		'<th class="text-center">Actions</th>' +
 		'</tr>' +
 		'</thead>' +
 		'<tbody>';
 	    for(i in commands) {
 		table += '<tr>';
 		table += '<td><a href="#" class="renderCommand" x-id="' + commands[i]['_id'] + '">'+ commands[i]['name'] + '</a></td>';
-		table += '<td class="text-center"><button class="btn btn-danger btn-xs removeCommand" x-id="' + commands[i]['_id'] + '">X</button></td>';
 		table += '</tr>';
 	    }
 	    table += '</tbody>' +
@@ -322,14 +295,6 @@ function renderExample (id) {
 	    });
 	    $('.renderCommand').click(function () {
 		renderCommand($(this).attr('x-id'));
-	    });
-	    $('.removeCommand').click(function () {
-		$.ajax({
-		    type: 'DELETE',
-		    url : server + '/examples/' + id + '/commands/' + $(this).attr('x-id')
-		}).fail(function () {
-		    renderExample(id);
-		});
 	    });
 	});
     }).fail(function () {
