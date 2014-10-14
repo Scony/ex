@@ -29,6 +29,9 @@ if __name__ == "__main__":
 		("/examples/([a-f0-9]{24})/commands/([a-z0-9]+)", ExampleCommandHandler),
 		("/popular/commands", PopularCommandsHandler),
 		("/popular/examples", PopularExamplesHandler),
+		("/angular()$", tornado.web.StaticFileHandler, {'path':os.path.dirname(os.path.abspath(__file__))+'/angular/index.html'}),
+		("/angular/()$", tornado.web.StaticFileHandler, {'path':os.path.dirname(os.path.abspath(__file__))+'/angular/index.html'}),
+		("/angular/(.*)", tornado.web.StaticFileHandler, {'path':os.path.dirname(os.path.abspath(__file__))+'/angular/'}),
 		("/()$", tornado.web.StaticFileHandler, {'path':os.path.dirname(os.path.abspath(__file__))+'/webapp/index.html'}),
 		("/(.*)", tornado.web.StaticFileHandler, {'path':os.path.dirname(os.path.abspath(__file__))+'/webapp/'}),
 	])

@@ -1,0 +1,25 @@
+<table class="table table-striped table-hover ">
+  <thead>
+    <tr>
+      <th>Command</th>
+      <th class="text-center">Examples</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr ng-repeat="command in commands">
+      <td><a href="#/commands/{{ command.name }}">{{ command.name }}</a></td>
+      <td class="text-center">{{ command.examples }}</td>
+    </tr>
+  </tbody>
+</table>
+<hr>
+<div class="well">
+  <h4>Add a command:</h4>
+  <div class="form-group">
+    <input type="text" class="form-control" placeholder="Name" ng-model="name">
+  </div>
+  <div class="form-group">
+    <textarea class="form-control" placeholder="Description" ng-model="description"></textarea>
+  </div>
+  <button type="submit" class="btn btn-success" ng-click="add()">Add</button>
+</div>
