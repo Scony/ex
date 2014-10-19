@@ -1,0 +1,23 @@
+<div class="jumbotron">
+  <h2>{{ name }}</h2>
+  <p>{{ description }}</p>
+</div>
+<table class="table table-striped table-hover ">
+  <thead>
+    <tr>
+      <th>Example</th>
+      <th class="text-center">Score</th>
+      <th class="text-center">Vote</th>
+    </tr>
+  </thead>
+  <tbody ng-repeat="example in examples">
+    <tr>
+      <td><a href="#/examples/{{ example._id }}">{{ example.example }}</a></td>
+      <td class="text-center">{{ example.score }}</td>
+      <td class="text-center">
+	<button class="btn btn-primary btn-xs" ng-click="upVote(example._id)">+</button>
+	<button class="btn btn-primary btn-xs" ng-click="downVote(example._id)">-</button>
+      </td>
+    </tr>
+  </tbody>
+</table>
