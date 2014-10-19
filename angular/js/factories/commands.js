@@ -1,3 +1,3 @@
-ex.factory('commandFactory', function ($resource) {
+ex.factory('commandsFactory', function ($resource) {
     return $resource('/commands/:name');
 });

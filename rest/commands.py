@@ -17,9 +17,27 @@ class CommandsHandler(tornado.web.RequestHandler):
 		self.write(json.dumps(jcommands)+'\n')
 
 	def post(self):
-		self.set_status(201)
-		_id = db['commands'].insert({'name': '', 'description': ''})
-		self.set_header("Location", "/commands/"+str(_id))
+		try:
+			data = json.loads(self.request.body.decode('utf-8'))
+		except:
+			self.set_status(400)
+		else:
+			allowed = ['name','description']
+			ok = True
+			for key in allowed:
+				if not key in data or not type(data[key]) is str or len(data[key]) == 0:
+					ok = False
+			if ok:
+				row = db['commands'].find_one({'name': data['name']})
+				if not row:
+					insert = {key : data[key] for key in set(allowed) & set(data.keys())}
+					_id = db['commands'].insert(insert)
+					self.set_status(201)
+					self.set_header("Location", "/commands/"+str(_id))
+				else:
+					self.set_status(409)
+			else:
+				self.set_status(400)
 
 class CommandHandler(tornado.web.RequestHandler):
 	def get(self, _id):
@@ -30,34 +48,6 @@ class CommandHandler(tornado.web.RequestHandler):
 		if row:
 			row['_id'] = str(row['_id'])
 			self.write(json.dumps(row))
-		else:
-			self.set_status(404)
-
-	def put(self, _id):
-		try:
-			row = db['commands'].find_one({'$or': [{'_id': ObjectId(_id)}, {'name': _id}]})
-		except:
-			row = db['commands'].find_one({'name': _id})
-		if row:
-			try:
-				data = json.loads(self.request.body.decode('utf-8'))
-			except:
-				self.set_status(400)
-			else:
-				allowed = ['name','description']
-				ok = True
-				for key in allowed:
-					if key in row and len(row[key]) != 0:
-						ok = False
-				if ok:
-					_updates = {key : data[key] for key in set(allowed) & set(data.keys())}
-					updates = {}
-					for k,v in _updates.items():
-						if type(v) is str:
-							updates[k] = v
-					db['commands'].update({'_id': row['_id']},{'$set':updates})
-				else:
-					self.set_status(409)
 		else:
 			self.set_status(404)
 

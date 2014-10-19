@@ -1,10 +1,12 @@
-ex.controller('commandsController', function ($scope, commandFactory) {
-    commandFactory.query(function (data) {
+ex.controller('commandsController', function ($scope, commandsFactory) {
+    commandsFactory.query(function (data) {
 	$scope.commands = data;
     });
 
     $scope.add = function() {
-	commandFactory.save({name: $scope.name, description:$scope.description});
-	alert($scope.name + '::' + $scope.description);
+	commandsFactory.save({name: $scope.name, description:$scope.description});
+	commandsFactory.query(function (data) {
+	    $scope.commands = data;
+	});
     };
 });

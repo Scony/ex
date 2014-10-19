@@ -17,9 +17,23 @@ class ExamplesHandler(tornado.web.RequestHandler):
 		self.write(json.dumps(jexamples)+'\n')
 
 	def post(self):
-		self.set_status(201)
-		_id = db['examples'].insert({'example': '', 'description': ''})
-		self.set_header("Location", "/examples/"+str(_id))
+		try:
+			data = json.loads(self.request.body.decode('utf-8'))
+		except:
+			self.set_status(400)
+		else:
+			allowed = ['example','description']
+			ok = True
+			for key in allowed:
+				if not key in data or not type(data[key]) is str or len(data[key]) == 0:
+					ok = False
+			if ok:
+				insert = {key : data[key] for key in set(allowed) & set(data.keys())}
+				_id = db['examples'].insert(insert)
+				self.set_status(201)
+				self.set_header("Location", "/examples/"+str(_id))
+			else:
+				self.set_status(400)
 
 class ExampleHandler(tornado.web.RequestHandler):
 	def get(self, _id):
@@ -32,31 +46,6 @@ class ExampleHandler(tornado.web.RequestHandler):
 			row['_id'] = str(row['_id'])
 			row['score'] = score
 			self.write(json.dumps(row))
-		else:
-			self.set_status(404)
-
-	def put(self, _id):
-		row = db['examples'].find_one({'_id': ObjectId(_id)})
-		if row:
-			try:
-				data = json.loads(self.request.body.decode('utf-8'))
-			except:
-				self.set_status(400)
-			else:
-				allowed = ['example','description']
-				ok = True
-				for key in allowed:
-					if key in row and len(row[key]) != 0:
-						ok = False
-				if ok:
-					_updates = {key : data[key] for key in set(allowed) & set(data.keys())}
-					updates = {}
-					for k,v in _updates.items():
-						if type(v) is str:
-							updates[k] = v
-					db['examples'].update({'_id': row['_id']},{'$set':updates})
-				else:
-					self.set_status(409)
 		else:
 			self.set_status(404)
 

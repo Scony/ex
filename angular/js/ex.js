@@ -9,5 +9,9 @@ ex.config(function ($routeProvider) {
 	    controller: 'commandsController',
 	    templateUrl: 'commands.html'
 	})
+	.when('/commands/:name', {
+	    controller: 'commandController',
+	    templateUrl: 'command.html'
+	})
 	.otherwise({ redirectTo: '/' });
 });
