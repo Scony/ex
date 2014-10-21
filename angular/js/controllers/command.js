@@ -1,8 +1,14 @@
-ex.controller('commandController', function ($scope, $routeParams, commandsFactory, commandExamplesFactory, votesService) {
+ex.controller('commandController', function ($scope, $routeParams, $location, commandsFactory, commandExamplesFactory, votesService) {
     $scope.name = $routeParams.name;
-    commandsFactory.get({ name:$routeParams.name }, function (data) { // todo: if 404 then redirect to 404 page
-	$scope.description = data['description'];
-    });
+    commandsFactory.get({ name:$routeParams.name }).$promise.then(
+	function (data) {
+	    $scope.description = data['description'];
+	},
+	function () {
+	    $location.path('/404');
+	    $scope.$apply();
+	}
+    );
     commandExamplesFactory.query({ name:$routeParams.name }, function(data) {
     	$scope.examples = data;
     });

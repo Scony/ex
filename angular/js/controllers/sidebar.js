@@ -8,15 +8,7 @@ ex.controller('sidebarController', function ($scope, $location, commandsFactory,
     });
 
     $scope.search = function () {
-	// todo: some loading bar
-	commandsFactory.get({ name:$scope.phrase }).$promise.then(
-	    function () {
-		$location.path('/commands/'+$scope.phrase);
-		$scope.$apply();
-	    },
-	    function () {
-		alert('no command found');
-	    }
-	);
+	$location.path('/commands/'+$scope.phrase);
+	$scope.$apply();
     };
 });

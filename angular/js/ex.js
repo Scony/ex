@@ -21,5 +21,8 @@ ex.config(function ($routeProvider) {
 	    controller: 'exampleController',
 	    templateUrl: 'example.html'
 	})
+	.when('/404', {
+	    templateUrl: '404.html'
+	})
 	.otherwise({ redirectTo: '/' });
 });
